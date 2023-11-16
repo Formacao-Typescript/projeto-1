@@ -1,13 +1,13 @@
 import { ConflictError } from '../domain/Errors/Conflict.js'
-import { Parent, ParentCreationType } from '../domain/Parent.js'
+import { Parent, ParentCreationType, ParentUpdateType } from '../domain/Parent.js'
 import { Service } from './BaseService.js'
 
 export class ParentService extends Service {
-  update(id: string, newData: Partial<Omit<ParentCreationType, 'id'>>): Parent {
+  update(id: string, newData: ParentUpdateType): Parent {
     const entity = this.findById(id) as Parent // FIXME: Como melhorar?
     const updated = new Parent({
       ...entity.toObject(),
-      ...newData
+      ...newData,
     })
     this.repository.save(updated)
     return updated
