@@ -5,7 +5,7 @@ interface DomainErrorOptions extends ErrorOptions {
   status?: number
 }
 
-export class DomainError extends Error {
+export abstract class DomainError extends Error {
   readonly code: string
   readonly status: number
   constructor(message: string, entity: SerializableStatic, options?: DomainErrorOptions) {
