@@ -1,7 +1,5 @@
 import { Database } from '../data/Db.js'
 import { ConflictError } from '../domain/Errors/Conflict.js'
-import { EmptyDependencyError } from '../domain/Errors/EmptyDependency.js'
-import { Parent } from '../domain/Parent.js'
 import { Student, StudentCreationType, StudentUpdateType } from '../domain/Student.js'
 import { Service } from './BaseService.js'
 import { ParentService } from './ParentService.js'
@@ -41,16 +39,8 @@ export class StudentService extends Service {
     const student = this.findById(id) as Student // FIXME: Como melhorar?
     parentsToUpdate.forEach((parentId) => this.parentService.findById(parentId))
 
-    const newParents = parentsToUpdate.filter((parentId) => !student.parents.includes(parentId))
-    this.#assertAtLeastOneParentLeft(newParents)
-    student.parents = [...student.parents, ...newParents]
+    student.parents = parentsToUpdate
     this.repository.save(student)
     return student
-  }
-
-  #assertAtLeastOneParentLeft(parentArray: unknown[]): asserts parentArray is [string, ...string[]] {
-    if (parentArray.length === 0) {
-      throw new EmptyDependencyError(Parent, Student)
-    }
   }
 }
