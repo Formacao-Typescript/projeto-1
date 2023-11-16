@@ -1,8 +1,8 @@
 import { Database } from '../data/Db.js'
-import { Class, ClassCreationType } from '../domain/Class.js'
+import { Class, ClassCreationType, ClassUpdateType } from '../domain/Class.js'
 import { ConflictError } from '../domain/Errors/Conflict.js'
 import { DependencyConflictError } from '../domain/Errors/DependencyConflict.js'
-import { MissingDependencyError } from '../domain/Errors/DependencyNotFound.js'
+import { MissingDependencyError } from '../domain/Errors/MissingDependency.js'
 import { NotFoundError } from '../domain/Errors/NotFound.js'
 import { Student } from '../domain/Student.js'
 import { Teacher } from '../domain/Teacher.js'
@@ -14,11 +14,11 @@ export class ClassService extends Service {
   constructor(
     repository: Database,
     private readonly teacherService: TeacherService,
-    private readonly studentService: StudentService
+    private readonly studentService: StudentService,
   ) {
     super(repository)
   }
-  update(id: string, newData: Partial<Omit<ClassCreationType, 'id'>>): Class {
+  update(id: string, newData: ClassUpdateType): Class {
     const entity = this.findById(id) as Class // FIXME: Como melhorar?
     if (newData.teacher) {
       try {
@@ -30,7 +30,7 @@ export class ClassService extends Service {
 
     const updated = new Class({
       ...entity.toObject(),
-      ...newData
+      ...newData,
     })
     this.repository.save(updated)
     return updated
