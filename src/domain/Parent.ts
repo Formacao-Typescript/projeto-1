@@ -27,13 +27,14 @@ export class Parent implements Serializable {
   readonly id: string
 
   constructor(data: ParentCreationType) {
-    this.firstName = data.firstName
-    this.surname = data.surname
-    this.phones = data.phones
-    this.emails = data.emails
-    this.address = data.address
-    this.document = data.document
-    this.id = data.id ?? randomUUID()
+    const parsed = ParentCreationSchema.parse(data)
+    this.firstName = parsed.firstName
+    this.surname = parsed.surname
+    this.phones = parsed.phones
+    this.emails = parsed.emails
+    this.address = parsed.address
+    this.document = parsed.document
+    this.id = parsed.id ?? randomUUID()
   }
 
   static fromObject(data: Record<string, unknown>) {

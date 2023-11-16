@@ -20,9 +20,10 @@ export class Class implements Serializable {
   readonly id: string
 
   constructor(data: ClassCreationType) {
-    this.code = data.code
-    this.teacher = data.teacher
-    this.id = data.id ?? randomUUID()
+    const parsed = ClassCreationSchema.parse(data)
+    this.code = parsed.code
+    this.teacher = parsed.teacher
+    this.id = parsed.id ?? randomUUID()
   }
   toObject() {
     return {

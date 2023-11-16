@@ -44,17 +44,18 @@ export class Student implements Serializable {
   readonly id: string
 
   constructor(data: StudentCreationType) {
-    this.firstName = data.firstName
-    this.surname = data.surname
-    this.document = data.document
-    this.bloodType = data.bloodType
-    this.birthDate = new Date(data.birthDate)
-    this.allergies = data.allergies
-    this.medications = data.medications
-    this.startDate = new Date(data.startDate)
-    this.#parents = data.parents
-    this.class = data.class
-    this.id = data.id ?? randomUUID()
+    const parsed = StudentCreationSchema.parse(data)
+    this.firstName = parsed.firstName
+    this.surname = parsed.surname
+    this.document = parsed.document
+    this.bloodType = parsed.bloodType
+    this.birthDate = new Date(parsed.birthDate)
+    this.allergies = parsed.allergies
+    this.medications = parsed.medications
+    this.startDate = new Date(parsed.startDate)
+    this.#parents = parsed.parents
+    this.class = parsed.class
+    this.id = parsed.id ?? randomUUID()
   }
 
   get parents() {
