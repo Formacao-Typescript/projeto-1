@@ -1,13 +1,13 @@
 import { ConflictError } from '../domain/Errors/Conflict.js'
-import { Teacher, TeacherCreationType } from '../domain/Teacher.js'
+import { Teacher, TeacherCreationType, TeacherUpdateType } from '../domain/Teacher.js'
 import { Service } from './BaseService.js'
 
 export class TeacherService extends Service {
-  update(id: string, newData: Partial<Omit<TeacherCreationType, 'id'>>): Teacher {
+  update(id: string, newData: TeacherUpdateType): Teacher {
     const entity = this.findById(id) as Teacher // FIXME: Como melhorar?
     const updated = new Teacher({
       ...entity.toObject(),
-      ...newData
+      ...newData,
     })
     this.repository.save(updated)
     return updated
