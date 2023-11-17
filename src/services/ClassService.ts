@@ -18,15 +18,16 @@ export class ClassService extends Service {
   ) {
     super(repository)
   }
-  update(id: string, newData: ClassUpdateType): Class {
-    const entity = this.findById(id) as Class // FIXME: Como melhorar?
-    if (newData.teacher) {
-      try {
-        this.teacherService.findById(newData.teacher)
-      } catch (err) {
-        throw new NotFoundError(newData.teacher, Teacher)
-      }
+
+  #assertTeacherExists(teacherId?: string | null) {
+    if (teacherId) {
+      this.teacherService.findById(teacherId)
     }
+  }
+
+  update(id: string, newData: ClassUpdateType) {
+    const entity = this.findById(id) as Class
+    this.#assertTeacherExists(newData.teacher)
 
     const updated = new Class({
       ...entity.toObject(),
@@ -36,42 +37,37 @@ export class ClassService extends Service {
     return updated
   }
 
-  create(creationData: ClassCreationType): Class {
+  create(creationData: ClassCreationType) {
     const existing = this.repository.listBy('code', creationData.code)
-    if (existing.length > 0) {
-      throw new ConflictError(creationData.code, Class)
-    }
+    if (existing.length > 0) throw new ConflictError(creationData.code, Class)
 
-    if (creationData.teacher) {
-      try {
-        this.teacherService.findById(creationData.teacher)
-      } catch (err) {
-        throw new NotFoundError(creationData.teacher, Teacher)
-      }
-    }
+    this.#assertTeacherExists(creationData.teacher)
 
     const entity = new Class(creationData)
     this.repository.save(entity)
     return entity
   }
 
-  remove(id: string): void {
+  remove(id: string) {
     const students = this.studentService.listBy('class', id)
     if (students.length > 0) {
       throw new DependencyConflictError(Class, id, Student)
     }
+
     this.repository.remove(id)
   }
 
   getTeacher(classId: string) {
-    const classEntity = this.findById(classId) as Class // FIXME: Como melhorar?
-    if (!classEntity.teacher) throw new MissingDependencyError(Teacher, classEntity.id, Class)
+    const classEntity = this.findById(classId) as Class // FIXME: como melhorar?
+
+    if (!classEntity.teacher) throw new MissingDependencyError(Teacher, classId, Class)
+
     const teacher = this.teacherService.findById(classEntity.teacher)
-    return teacher
+    return teacher as Teacher
   }
 
   getStudents(classId: string) {
-    const classEntity = this.findById(classId)
-    return this.studentService.listBy('class', classEntity.id)
+    const classEntity = this.findById(classId) as Class
+    return this.studentService.listBy('class', classEntity.id) as Student[]
   }
 }
