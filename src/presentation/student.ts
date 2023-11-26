@@ -1,12 +1,14 @@
 import { Router, Request } from 'express'
-import { Student, StudentCreationSchema, StudentUpdateSchema, StudentUpdateType } from '../domain/Student.js'
+import {
+  Student,
+  StudentCreationSchema,
+  StudentCreationType,
+  StudentUpdateSchema,
+  StudentUpdateType,
+} from '../domain/Student.js'
 import { StudentService } from '../services/StudentService.js'
 import zodValidationMiddleware from './middlewares/zodValidationMiddleware.js'
-import { z } from 'zod'
 import { Parent } from '../domain/Parent.js'
-
-const studentParentPatchSchema = z.object({ parentIds: z.string().uuid().array().nonempty() })
-type StudentParentPatchType = z.infer<typeof studentParentPatchSchema>
 
 export function studentRouterFactory(studentService: StudentService) {
   const router = Router()
@@ -20,11 +22,11 @@ export function studentRouterFactory(studentService: StudentService) {
     }
   })
 
-  router.get('/', async (req, res) => {
+  router.get('/', async (_, res) => {
     return res.json((studentService.list() as Student[]).map((student: Student) => student.toObject())) // FIXME: Como melhorar?
   })
 
-  router.post('/', zodValidationMiddleware(StudentCreationSchema), async (req, res, next) => {
+  router.post('/', zodValidationMiddleware(StudentCreationSchema.omit({ id: true })), async (req, res, next) => {
     try {
       const student = studentService.create(req.body)
       return res.status(201).json(student.toObject())
@@ -44,7 +46,7 @@ export function studentRouterFactory(studentService: StudentService) {
       } catch (error) {
         next(error)
       }
-    }
+    },
   )
 
   router.delete('/:id', async (req, res) => {
@@ -64,16 +66,16 @@ export function studentRouterFactory(studentService: StudentService) {
 
   router.patch(
     '/:id/parents',
-    zodValidationMiddleware(studentParentPatchSchema),
-    async (req: Request<{ id: string }, any, StudentParentPatchType>, res, next) => {
+    zodValidationMiddleware(StudentCreationSchema.pick({ parents: true })),
+    async (req: Request<{ id: string }, any, Pick<StudentCreationType, 'parents'>>, res, next) => {
       try {
         const { id } = req.params
-        const { parentIds } = req.body
-        return res.json(studentService.linkParents(id, parentIds).toObject())
+        const { parents } = req.body
+        return res.json(studentService.linkParents(id, parents).toObject())
       } catch (error) {
         next(error)
       }
-    }
+    },
   )
 
   return router

@@ -1,12 +1,8 @@
 import { Request, Router } from 'express'
-import { z } from 'zod'
 import { Class, ClassCreationSchema, ClassCreationType, ClassUpdateSchema, ClassUpdateType } from '../domain/Class.js'
 import { Student } from '../domain/Student.js'
 import { ClassService } from '../services/ClassService.js'
 import zodValidationMiddleware from './middlewares/zodValidationMiddleware.js'
-
-const teacherPatchSchema = z.object({ teacherId: z.string().uuid() })
-type TeacherPatchType = z.infer<typeof teacherPatchSchema>
 
 export function classRouterFactory(classService: ClassService) {
   const router = Router()
@@ -21,7 +17,7 @@ export function classRouterFactory(classService: ClassService) {
     }
   })
 
-  router.get('/', async (req, res) => {
+  router.get('/', async (_, res) => {
     return res.json((classService.list() as Class[]).map((classEntity: Class) => classEntity.toObject())) // FIXME: Como melhorar?
   })
 
@@ -35,7 +31,7 @@ export function classRouterFactory(classService: ClassService) {
       } catch (error) {
         next(error)
       }
-    }
+    },
   )
 
   router.put(
@@ -49,7 +45,7 @@ export function classRouterFactory(classService: ClassService) {
       } catch (error) {
         next(error)
       }
-    }
+    },
   )
 
   router.delete('/:id', async (req, res, next) => {
