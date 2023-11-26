@@ -9,8 +9,9 @@ import {
 import { StudentService } from '../services/StudentService.js'
 import zodValidationMiddleware from './middlewares/zodValidationMiddleware.js'
 import { Parent } from '../domain/Parent.js'
+import { ClassService } from '../services/ClassService.js'
 
-export function studentRouterFactory(studentService: StudentService) {
+export function studentRouterFactory(studentService: StudentService, classService: ClassService) {
   const router = Router()
 
   router.get('/:id', async (req, res, next) => {
@@ -29,6 +30,8 @@ export function studentRouterFactory(studentService: StudentService) {
   router.post('/', zodValidationMiddleware(StudentCreationSchema.omit({ id: true })), async (req, res, next) => {
     try {
       const student = studentService.create(req.body)
+      // verifica se a classe existe antes de inserir o objeto
+      classService.findById(req.body.class)
       return res.status(201).json(student.toObject())
     } catch (error) {
       next(error)
