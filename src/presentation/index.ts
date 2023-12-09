@@ -18,7 +18,7 @@ export async function WebLayer(config: AppConfig, services: ServiceList) {
   app.use('/classes', classRouterFactory(services.class))
   app.use('/teachers', teacherRouterFactory(services.teacher, services.student, services.class))
   app.use('/parents', parentRouterFactory(services.parent, services.student))
-  app.use('/students', studentRouterFactory(services.student))
+  app.use('/students', studentRouterFactory(services.student, services.class))
   app.get('/ping', (_, res) => res.send('pong'))
   app.use(async (err: any, _: Request, res: Response, next: NextFunction) => {
     if (err) {
