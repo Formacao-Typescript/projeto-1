@@ -86,8 +86,8 @@ export async function match(router: Router, req: IncomingMessage, res: ServerRes
   const searchURL = `${req.method?.toUpperCase()} ${req.url}` ?? ''
   const maybeHandler = await router.find(searchURL)
   if (maybeHandler) {
+    // Adiciona os métodos extendidos na requisição e resposta
     const { extendedRequest, extendedResponse } = extendNativeParameters(req, res)
-
     const { handler, params } = maybeHandler
     // Adiciona os parametros da rota na requisição
     extendedRequest.params = params
