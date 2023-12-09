@@ -1,17 +1,10 @@
-import type { NextFunction, Request, Response } from 'express'
-import { ZodError, ZodSchema } from 'zod'
+import { ZodSchema } from 'zod'
+import { ValidationError } from '../../domain/Errors/ValidationError.js'
 
-export default (schema: ZodSchema) => (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (req.body) {
-      const result = schema.parse(req.body)
-      req.body = result
-    }
-    next()
-  } catch (error) {
-    if (error instanceof ZodError) {
-      return res.status(422).json(error)
-    }
-    next(error)
+export default <T extends ZodSchema<T['_output']>>(schema: T, toValidate: unknown) => {
+  const result = schema.safeParse(toValidate)
+  if (!result.success) {
+    throw new ValidationError(result.error)
   }
+  return result.data
 }
