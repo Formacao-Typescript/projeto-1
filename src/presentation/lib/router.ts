@@ -55,11 +55,13 @@ export async function routerFactory(routes: RouteList) {
         return { handler: enrichedHandler.handler, params }
       }
     },
+    existsWithOtherMethod: (url: string) =>
+      [...enrichedRoutes.keys()].map((r) => new RegExp(r.split(' ')[1])).some((r) => r.test(url)),
     routes: enrichedRoutes,
   }
 }
 
-export async function match(router: Router, req: IncomingMessage, res: ServerResponse<IncomingMessage>) {
+function extendNativeParameters(req: IncomingMessage, res: ServerResponse<IncomingMessage>) {
   const extendedResponse: ExtendedResponse = Object.assign(res, {
     json: (body: any) => {
       if (!res.headersSent) res.setHeader('Content-Type', 'application/json')
@@ -74,16 +76,26 @@ export async function match(router: Router, req: IncomingMessage, res: ServerRes
     body: <T>() => bodyParser(req) as Promise<T>,
     params: {},
   })
+  return {
+    extendedRequest,
+    extendedResponse,
+  }
+}
 
+export async function match(router: Router, req: IncomingMessage, res: ServerResponse<IncomingMessage>) {
   const searchURL = `${req.method?.toUpperCase()} ${req.url}` ?? ''
   const maybeHandler = await router.find(searchURL)
   if (maybeHandler) {
+    const { extendedRequest, extendedResponse } = extendNativeParameters(req, res)
+
     const { handler, params } = maybeHandler
+    // Adiciona os parametros da rota na requisição
     extendedRequest.params = params
+    // Executa o handler da rota
     await handler(extendedRequest, extendedResponse)
   } else {
     // Verifica se a rota existe, mas o método não
-    if ([...router.routes.keys()].map((r) => new RegExp(r.split(' ')[1]).test(req.url ?? '')).some(Boolean)) {
+    if (router.existsWithOtherMethod(searchURL)) {
       res.writeHead(405, { 'Content-Type': 'text/plain' })
       return
     }
