@@ -19,7 +19,6 @@ export async function WebLayer(config: AppConfig, services: ServiceList) {
     parentRouterFactory(services.parent, services.student),
     studentRouterFactory(services.student, services.class),
   ])
-  console.dir(router)
 
   let server = createServer(async (req, res) => {
     try {
