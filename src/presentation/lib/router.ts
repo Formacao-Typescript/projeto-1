@@ -61,7 +61,7 @@ export async function routerFactory(routes: RouteList) {
   }
 }
 
-function extendNativeParameters(req: IncomingMessage, res: ServerResponse<IncomingMessage>) {
+function extendNativeObjects(req: IncomingMessage, res: ServerResponse<IncomingMessage>) {
   const extendedResponse: ExtendedResponse = Object.assign(res, {
     json: (body: any) => {
       if (!res.headersSent) res.setHeader('Content-Type', 'application/json')
@@ -72,10 +72,12 @@ function extendNativeParameters(req: IncomingMessage, res: ServerResponse<Incomi
       return res as ExtendedResponse
     },
   })
+
   const extendedRequest: ExtendedRequest = Object.assign(req, {
     body: <T>() => bodyParser(req) as Promise<T>,
     params: {},
   })
+
   return {
     extendedRequest,
     extendedResponse,
@@ -87,7 +89,7 @@ export async function match(router: Router, req: IncomingMessage, res: ServerRes
   const maybeHandler = await router.find(searchURL)
   if (maybeHandler) {
     // Adiciona os métodos extendidos na requisição e resposta
-    const { extendedRequest, extendedResponse } = extendNativeParameters(req, res)
+    const { extendedRequest, extendedResponse } = extendNativeObjects(req, res)
     const { handler, params } = maybeHandler
     // Adiciona os parametros da rota na requisição
     extendedRequest.params = params
