@@ -4,7 +4,7 @@ import { Teacher, TeacherCreationSchema, TeacherUpdateSchema } from '../domain/T
 import { ClassService } from '../services/ClassService.js'
 import { StudentService } from '../services/StudentService.js'
 import { TeacherService } from '../services/TeacherService.js'
-import { RouteList } from './lib/router.js'
+import { Router } from './lib/Router.js'
 import zodValidationMiddleware from './middlewares/zodValidationMiddleware.js'
 
 export function teacherRouterFactory(
@@ -12,33 +12,33 @@ export function teacherRouterFactory(
   studentService: StudentService,
   classService: ClassService,
 ) {
-  const router: RouteList = new Map()
+  const router = new Router('/teachers')
 
-  router.set('GET /teachers/:id', async (req, res) => {
+  router.get('/:id', async (req, res) => {
     const { id } = req.params
     const teacher = teacherService.findById(id)
     res.json(teacher.toObject())
   })
 
-  router.set('GET /teachers', async (_, res) => {
+  router.get('/', async (_, res) => {
     const teachers = teacherService.list() as Teacher[] // FIXME: Como melhorar?
     res.json(teachers.map((teacher: Teacher) => teacher.toObject()))
   })
 
-  router.set('POST /teachers', async (req, res) => {
+  router.post('/', async (req, res) => {
     const body = zodValidationMiddleware(TeacherCreationSchema.omit({ id: true }), await req.body())
     const teacher = teacherService.create(body)
     res.status(201).json(teacher.toObject())
   })
 
-  router.set('PUT /teachers/:id', async (req, res) => {
+  router.put('/:id', async (req, res) => {
     const body = zodValidationMiddleware(TeacherUpdateSchema, await req.body())
     const { id } = req.params
     const updated = teacherService.update(id, body)
     res.json(updated.toObject())
   })
 
-  router.set('DELETE /teachers/:id', async (req, res) => {
+  router.delete('/:id', async (req, res) => {
     const classes = classService.listBy('teacher', req.params.id)
 
     for (const classEntity of classes) {
@@ -48,7 +48,7 @@ export function teacherRouterFactory(
     res.status(204).json(teacherService.remove(req.params.id))
   })
 
-  router.set('GET /teachers/:id/students', async (req, res) => {
+  router.get('/:id/students', async (req, res) => {
     const { id } = req.params
     teacherService.findById(id)
 
@@ -66,7 +66,7 @@ export function teacherRouterFactory(
     res.json(totalStudents.map((student) => student.toObject()))
   })
 
-  router.set('GET /teachers/:id/classes', async (req, res) => {
+  router.get('/:id/classes', async (req, res) => {
     const { id } = req.params
     teacherService.findById(id)
     return res.json((classService.listBy('teacher', id) as Class[]).map((classEntity: Class) => classEntity.toObject())) // FIXME: Como melhorar?

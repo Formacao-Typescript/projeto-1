@@ -2,34 +2,34 @@ import { Parent, ParentCreationSchema, ParentUpdateSchema } from '../domain/Pare
 import { Student } from '../domain/Student.js'
 import { ParentService } from '../services/ParentService.js'
 import { StudentService } from '../services/StudentService.js'
-import { RouteList } from './lib/router.js'
+import { Router } from './lib/Router.js'
 import zodValidationMiddleware from './middlewares/zodValidationMiddleware.js'
 
 export function parentRouterFactory(parentService: ParentService, studentService: StudentService) {
-  const router: RouteList = new Map()
+  const router = new Router('/parents')
 
-  router.set('GET /parents/:id', async (req, res) => {
+  router.get('/:id', async (req, res) => {
     return res.json(parentService.findById(req.params.id).toObject())
   })
 
-  router.set('GET /parents', async (_, res) => {
+  router.get('/', async (_, res) => {
     return res.json((parentService.list() as Parent[]).map((parent: Parent) => parent.toObject()))
   })
 
-  router.set('POST /parents', async (req, res) => {
+  router.post('/', async (req, res) => {
     const body = zodValidationMiddleware(ParentCreationSchema.omit({ id: true }), await req.body())
     const parent = parentService.create(body)
     return res.status(201).json(parent.toObject())
   })
 
-  router.set('PUT /parents/:id', async (req, res) => {
+  router.put('/:id', async (req, res) => {
     const body = zodValidationMiddleware(ParentUpdateSchema, await req.body())
     const { id } = req.params
     const updated = parentService.update(id, body)
     return res.json(updated.toObject())
   })
 
-  router.set('DELETE /parents/:id', async (req, res) => {
+  router.delete('/:id', async (req, res) => {
     const { id } = req.params
     const students = studentService.listBy('parents', [id])
     if (students.length > 0) {
@@ -42,7 +42,7 @@ export function parentRouterFactory(parentService: ParentService, studentService
     return void res.status(204).end()
   })
 
-  router.set('GET /parents/:id/students', async (req, res) => {
+  router.get('/:id/students', async (req, res) => {
     const { id } = req.params
     const students = studentService.listBy('parents', [id]) as Student[] // FIXME: Como melhorar?
     return res.json(students.map((student: Student) => student.toObject()))

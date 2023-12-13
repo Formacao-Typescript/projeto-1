@@ -3,26 +3,27 @@ import type { ServiceList } from '../app.js'
 import type { AppConfig } from '../config.js'
 import { classRouterFactory } from './class.js'
 import { defaultRouterFactory } from './default.js'
-import { match, routerFactory } from './lib/router.js'
+
 import { parentRouterFactory } from './parent.js'
 import { studentRouterFactory } from './student.js'
 import { teacherRouterFactory } from './teacher.js'
+import { Router } from './lib/Router.js'
 
 // ServiceList aqui pode ser um index type como [key: string]: Service<any, any>
 // Como podemos deixar ele específico e mais seguro? Temos que pegar o retorno da função initDependencies
 export async function WebLayer(config: AppConfig, services: ServiceList) {
-  const routes = await routerFactory(
-    new Map([
-      ...defaultRouterFactory(),
-      ...classRouterFactory(services.class),
-      ...teacherRouterFactory(services.teacher, services.student, services.class),
-      ...parentRouterFactory(services.parent, services.student),
-      ...studentRouterFactory(services.student, services.class),
-    ]),
-  )
+  const router = new Router([
+    defaultRouterFactory(),
+    classRouterFactory(services.class),
+    teacherRouterFactory(services.teacher, services.student, services.class),
+    parentRouterFactory(services.parent, services.student),
+    studentRouterFactory(services.student, services.class),
+  ])
+  console.dir(router)
+
   let server = createServer(async (req, res) => {
     try {
-      await match(routes, req, res)
+      await router.executeHandler(req, res)
     } catch (err: any) {
       console.error(err)
       res.writeHead(err?.status ?? 500, { 'Content-type': 'application/json' })
