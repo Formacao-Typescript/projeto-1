@@ -80,29 +80,31 @@ export class Router {
   async executeHandler(req: IncomingMessage, res: ServerResponse<IncomingMessage>) {
     const searchURL = `${req.method?.toUpperCase()} ${req.url}` ?? ''
     const maybeHandler = await this.#findAndParse(searchURL)
-    let duration = performance.now()
     process.stdout.write(`<- ${searchURL} from ${req.headers.host ?? 'unknown host'}\n`)
+    let duration = performance.now()
 
-    if (maybeHandler) {
-      // Adiciona os métodos extendidos na requisição e resposta
-      const { extendedRequest, extendedResponse } = this.#extendNativeObjects(req, res)
-      const { handler, params } = maybeHandler
-      // Adiciona os parametros da rota na requisição
-      extendedRequest.params = params
-      // Executa o handler da rota
-      await handler(extendedRequest, extendedResponse)
-      duration = performance.now() - duration
-    } else {
-      // Verifica se a rota existe, mas o método não
-      if (this.existsWithOtherMethod(searchURL)) {
-        res.writeHead(405, { 'Content-Type': 'text/plain' })
-        return
+    try {
+      if (maybeHandler) {
+        // Adiciona os métodos extendidos na requisição e resposta
+        const { extendedRequest, extendedResponse } = this.#extendNativeObjects(req, res)
+        const { handler, params } = maybeHandler
+        // Adiciona os parametros da rota na requisição
+        extendedRequest.params = params
+        // Executa o handler da rota
+        await handler(extendedRequest, extendedResponse)
+      } else {
+        // Verifica se a rota existe, mas o método não
+        if (this.existsWithOtherMethod(searchURL)) {
+          res.writeHead(405, { 'Content-Type': 'text/plain' })
+          return
+        }
+        // Nem a rota nem o método existem
+        return res.writeHead(404, { 'Content-Type': 'text/plain' })
       }
-      // Nem a rota nem o método existe
-      return res.writeHead(404, { 'Content-Type': 'text/plain' })
+    } finally {
+      duration = performance.now() - duration
+      process.stdout.write(`-> ${searchURL} :: ${res.statusCode} (${duration.toFixed(2)}ms)\n`)
     }
-
-    process.stdout.write(`-> ${searchURL} :: ${res.statusCode} (${duration.toFixed(2)}ms)\n`)
   }
 
   #newRoute(method: string, route: string, handler: RouteHandler) {
