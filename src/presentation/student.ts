@@ -1,85 +1,62 @@
-import { Router, Request } from 'express'
-import {
-  Student,
-  StudentCreationSchema,
-  StudentCreationType,
-  StudentUpdateSchema,
-  StudentUpdateType,
-} from '../domain/Student.js'
-import { StudentService } from '../services/StudentService.js'
-import zodValidationMiddleware from './middlewares/zodValidationMiddleware.js'
+import { FastifyInstance, FastifyPluginOptions } from 'fastify'
+import { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { Parent } from '../domain/Parent.js'
+import { Student, StudentCreationSchema, StudentUpdateSchema } from '../domain/Student.js'
 import { ClassService } from '../services/ClassService.js'
+import { StudentService } from '../services/StudentService.js'
+import { onlyIdParamSchema } from './index.js'
 
 export function studentRouterFactory(studentService: StudentService, classService: ClassService) {
-  const router = Router()
+  return (fastifyInstance: FastifyInstance, _: FastifyPluginOptions, done: (err?: Error) => void) => {
+    const router = fastifyInstance.withTypeProvider<ZodTypeProvider>()
 
-  router.get('/:id', async (req, res, next) => {
-    try {
+    router.get('/:id', onlyIdParamSchema, async (req, res) => {
       const student = studentService.findById(req.params.id)
-      return res.json(student.toObject())
-    } catch (error) {
-      next(error)
-    }
-  })
+      return res.send(student.toObject())
+    })
 
-  router.get('/', async (_, res) => {
-    return res.json((studentService.list() as Student[]).map((student: Student) => student.toObject())) // FIXME: Como melhorar?
-  })
+    router.get('/', async (_, res) => {
+      return res.send((studentService.list() as Student[]).map((student: Student) => student.toObject())) // FIXME: Como melhorar?
+    })
 
-  router.post('/', zodValidationMiddleware(StudentCreationSchema.omit({ id: true })), async (req, res, next) => {
-    try {
+    router.post('/', { schema: { body: StudentCreationSchema.omit({ id: true }) } }, async (req, res) => {
       const student = studentService.create(req.body)
       // verifica se a classe existe antes de inserir o objeto
       classService.findById(req.body.class)
-      return res.status(201).json(student.toObject())
-    } catch (error) {
-      next(error)
-    }
-  })
+      return res.status(201).send(student.toObject())
+    })
 
-  router.put(
-    '/:id',
-    zodValidationMiddleware(StudentUpdateSchema),
-    async (req: Request<{ id: string }, any, StudentUpdateType>, res, next) => {
-      try {
+    router.put(
+      '/:id',
+      { schema: { body: StudentUpdateSchema, params: onlyIdParamSchema.schema.params } },
+      async (req, res) => {
         const { id } = req.params
         const updated = studentService.update(id, req.body)
-        return res.json(updated.toObject())
-      } catch (error) {
-        next(error)
+        return res.send(updated.toObject())
       }
-    },
-  )
+    )
 
-  router.delete('/:id', async (req, res) => {
-    studentService.remove(req.params.id)
-    return res.status(204).send()
-  })
+    router.delete('/:id', onlyIdParamSchema, async (req, res) => {
+      studentService.remove(req.params.id)
+      return res.status(204).send()
+    })
 
-  router.get('/:id/parents', async (req, res, next) => {
-    try {
+    router.get('/:id/parents', onlyIdParamSchema, async (req, res) => {
       const { id } = req.params
       const parents = studentService.getParents(id) as Parent[] // FIXME: Como melhorar?
-      return res.json(parents.map((parent: Parent) => parent.toObject()))
-    } catch (error) {
-      next(error)
-    }
-  })
+      return res.send(parents.map((parent: Parent) => parent.toObject()))
+    })
 
-  router.patch(
-    '/:id/parents',
-    zodValidationMiddleware(StudentCreationSchema.pick({ parents: true })),
-    async (req: Request<{ id: string }, any, Pick<StudentCreationType, 'parents'>>, res, next) => {
-      try {
+    router.patch(
+      '/:id/parents',
+      { schema: { body: StudentCreationSchema.pick({ parents: true }), params: onlyIdParamSchema.schema.params } },
+      async (req, res) => {
         const { id } = req.params
         const { parents } = req.body
-        return res.json(studentService.linkParents(id, parents).toObject())
-      } catch (error) {
-        next(error)
+        return res.send(studentService.linkParents(id, parents).toObject())
       }
-    },
-  )
+    )
 
-  return router
+    done()
+  }
 }

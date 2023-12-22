@@ -1,85 +1,72 @@
-import { Request, Router } from 'express'
-import {
-  Teacher,
-  TeacherCreationSchema,
-  TeacherCreationType,
-  TeacherUpdateSchema,
-  TeacherUpdateType
-} from '../domain/Teacher.js'
+import { FastifyInstance, FastifyPluginOptions } from 'fastify'
+import { ZodTypeProvider } from 'fastify-type-provider-zod'
+import { Class } from '../domain/Class.js'
+import { Student } from '../domain/Student.js'
+import { Teacher, TeacherCreationSchema, TeacherUpdateSchema } from '../domain/Teacher.js'
 import { ClassService } from '../services/ClassService.js'
 import { StudentService } from '../services/StudentService.js'
 import { TeacherService } from '../services/TeacherService.js'
-import zodValidationMiddleware from './middlewares/zodValidationMiddleware.js'
-import { Student } from '../domain/Student.js'
-import { Class } from '../domain/Class.js'
+import { onlyIdParamSchema } from './index.js'
 
 export function teacherRouterFactory(
   teacherService: TeacherService,
   studentService: StudentService,
   classService: ClassService
 ) {
-  const router = Router()
+  return (fastifyInstance: FastifyInstance, _: FastifyPluginOptions, done: (err?: Error) => void) => {
+    const router = fastifyInstance.withTypeProvider<ZodTypeProvider>()
 
-  router.get('/:id', async (req, res, next) => {
-    const { id } = req.params
-    try {
+    router.get('/:id', onlyIdParamSchema, async (req, res) => {
+      const { id } = req.params
       const teacher = teacherService.findById(id)
-      res.json(teacher.toObject())
-    } catch (err) {
-      next(err)
-    }
-  })
+      res.send(teacher.toObject())
+    })
 
-  router.get('/', async (_, res) => {
-    const teachers = teacherService.list() as Teacher[] // FIXME: Como melhorar?
-    res.json(teachers.map((teacher: Teacher) => teacher.toObject()))
-  })
+    router.get('/', async (_, res) => {
+      const teachers = teacherService.list() as Teacher[] // FIXME: Como melhorar?
+      res.send(teachers.map((teacher: Teacher) => teacher.toObject()))
+    })
 
-  router.post(
-    '/',
-    zodValidationMiddleware(TeacherCreationSchema.omit({ id: true })),
-    async (req: Request<never, any, Omit<TeacherCreationType, 'id'>>, res, next) => {
-      try {
+    router.post(
+      '/',
+      {
+        schema: {
+          body: TeacherCreationSchema.omit({ id: true })
+        }
+      },
+      async (req, res) => {
         const teacher = teacherService.create(req.body)
-        res.status(201).json(teacher.toObject())
-      } catch (error) {
-        next(error)
+        res.status(201).send(teacher.toObject())
       }
-    }
-  )
+    )
 
-  router.put(
-    '/:id',
-    zodValidationMiddleware(TeacherUpdateSchema),
-    async (req: Request<{ id: string }, any, TeacherUpdateType>, res, next) => {
-      try {
+    router.put(
+      '/:id',
+      { schema: { body: TeacherUpdateSchema, params: onlyIdParamSchema.schema.params } },
+      async (req, res) => {
         const { id } = req.params
         const updated = teacherService.update(id, req.body)
-        res.json(updated.toObject())
-      } catch (error) {
-        next(error)
+        res.send(updated.toObject())
       }
-    }
-  )
+    )
 
-  router.delete('/:id', async (req, res) => {
-    const classes = classService.listBy('teacher', req.params.id)
+    router.delete('/:id', onlyIdParamSchema, async (req, res) => {
+      const classes = classService.listBy('teacher', req.params.id)
 
-    for (const classEntity of classes) {
-      classService.update(classEntity.id, { teacher: null })
-    }
+      for (const classEntity of classes) {
+        classService.update(classEntity.id, { teacher: null })
+      }
 
-    res.status(204).json(teacherService.remove(req.params.id))
-  })
+      res.status(204).send(teacherService.remove(req.params.id))
+    })
 
-  router.get('/:id/students', async (req, res, next) => {
-    try {
+    router.get('/:id/students', onlyIdParamSchema, async (req, res) => {
       const { id } = req.params
       teacherService.findById(id)
 
       const classes = classService.listBy('teacher', id)
       if (classes.length === 0) {
-        return res.json([])
+        return res.send([])
       }
 
       let totalStudents: Student[] = []
@@ -88,23 +75,17 @@ export function teacherRouterFactory(
         totalStudents = [...totalStudents, ...students]
       }
 
-      res.json(totalStudents.map((student) => student.toObject()))
-    } catch (error) {
-      next(error)
-    }
-  })
+      res.send(totalStudents.map((student) => student.toObject()))
+    })
 
-  router.get('/:id/classes', async (req, res, next) => {
-    try {
+    router.get('/:id/classes', onlyIdParamSchema, async (req, res) => {
       const { id } = req.params
       teacherService.findById(id)
-      return res.json(
+      return res.send(
         (classService.listBy('teacher', id) as Class[]).map((classEntity: Class) => classEntity.toObject())
       ) // FIXME: Como melhorar?
-    } catch (error) {
-      next(error)
-    }
-  })
+    })
 
-  return router
+    done()
+  }
 }

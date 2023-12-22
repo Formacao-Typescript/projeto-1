@@ -1,81 +1,70 @@
-import { Request, Router } from 'express'
-import { Class, ClassCreationSchema, ClassCreationType, ClassUpdateSchema, ClassUpdateType } from '../domain/Class.js'
-import { Student } from '../domain/Student.js'
+import { FastifyInstance, FastifyPluginOptions } from 'fastify'
 import { ClassService } from '../services/ClassService.js'
-import zodValidationMiddleware from './middlewares/zodValidationMiddleware.js'
+import { ZodTypeProvider } from 'fastify-type-provider-zod'
+import { z } from 'zod'
+import { Class, ClassCreationSchema, ClassUpdateSchema } from '../domain/Class.js'
+import { Student } from '../domain/Student.js'
+import { onlyIdParamSchema } from './index.js'
 
 export function classRouterFactory(classService: ClassService) {
-  const router = Router()
+  return (fastifyInstance: FastifyInstance, _: FastifyPluginOptions, done: (err?: Error) => void) => {
+    const router = fastifyInstance.withTypeProvider<ZodTypeProvider>()
 
-  router.get('/:id', async (req, res, next) => {
-    try {
+    router.get('/:id', onlyIdParamSchema, async (req, res) => {
       const { id } = req.params
       const classEntity = classService.findById(id)
-      return res.json(classEntity.toObject())
-    } catch (error) {
-      next(error)
-    }
-  })
+      return res.send(classEntity.toObject())
+    })
 
-  router.get('/', async (_, res) => {
-    return res.json((classService.list() as Class[]).map((classEntity: Class) => classEntity.toObject())) // FIXME: Como melhorar?
-  })
+    router.get('/', async (_, res) => {
+      return res.send((classService.list() as Class[]).map((classEntity: Class) => classEntity.toObject())) // FIXME: Como melhorar?
+    })
 
-  router.post(
-    '/',
-    zodValidationMiddleware(ClassCreationSchema.omit({ id: true })),
-    async (req: Request<never, any, Omit<ClassCreationType, 'id'>>, res, next) => {
-      try {
+    router.post(
+      '/',
+      {
+        schema: {
+          body: ClassCreationSchema.omit({ id: true })
+        }
+      },
+      async (req, res) => {
         const classEntity = classService.create(req.body)
-        return res.status(201).json(classEntity.toObject())
-      } catch (error) {
-        next(error)
+        return res.status(201).send(classEntity.toObject())
       }
-    },
-  )
+    )
 
-  router.put(
-    '/:id',
-    zodValidationMiddleware(ClassUpdateSchema),
-    async (req: Request<{ id: string }, any, ClassUpdateType>, res, next) => {
-      try {
+    router.put(
+      '/:id',
+      {
+        schema: {
+          body: ClassUpdateSchema,
+          params: onlyIdParamSchema.schema.params
+        }
+      },
+      async (req, res) => {
         const { id } = req.params
         const updated = classService.update(id, req.body)
-        return res.json(updated.toObject())
-      } catch (error) {
-        next(error)
+        return res.send(updated.toObject())
       }
-    },
-  )
+    )
 
-  router.delete('/:id', async (req, res, next) => {
-    try {
+    router.delete('/:id', onlyIdParamSchema, async (req, res) => {
       classService.remove(req.params.id)
       return res.status(204).send()
-    } catch (error) {
-      next(error)
-    }
-  })
+    })
 
-  router.get('/:id/students', async (req, res, next) => {
-    try {
+    router.get('/:id/students', onlyIdParamSchema, async (req, res) => {
       const { id } = req.params
       const students = classService.getStudents(id) as Student[] // FIXME: Como melhorar?
-      return res.json(students.map((student: Student) => student.toObject()))
-    } catch (error) {
-      next(error)
-    }
-  })
+      return res.send(students.map((student: Student) => student.toObject()))
+    })
 
-  router.get('/:id/teacher', async (req, res, next) => {
-    try {
+    router.get('/:id/teacher', onlyIdParamSchema, async (req, res) => {
       const { id } = req.params
       const teacher = classService.getTeacher(id)
-      return res.json(teacher.toObject())
-    } catch (error) {
-      next(error)
-    }
-  })
+      return res.send(teacher.toObject())
+    })
 
-  return router
+    done()
+  }
 }
