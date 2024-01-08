@@ -3,17 +3,17 @@ import { Parent, ParentCreationType, ParentUpdateType } from '../domain/Parent.j
 import { Service } from './BaseService.js'
 
 export class ParentService extends Service {
-  update(id: string, newData: ParentUpdateType): Parent {
+  update(id: string, newData: ParentUpdateType) {
     const entity = this.findById(id) as Parent // FIXME: Como melhorar?
     const updated = new Parent({
       ...entity.toObject(),
-      ...newData,
+      ...newData
     })
     this.repository.save(updated)
     return updated
   }
 
-  create(creationData: ParentCreationType): Parent {
+  create(creationData: ParentCreationType) {
     const existing = this.repository.listBy('document', creationData.document)
     if (existing.length > 0) {
       throw new ConflictError(creationData.document, Parent)

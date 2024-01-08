@@ -9,17 +9,17 @@ export class StudentService extends Service {
     super(repository)
   }
 
-  update(id: string, newData: StudentUpdateType): Student {
+  update(id: string, newData: StudentUpdateType) {
     const entity = this.findById(id) as Student // FIXME: Como melhorar?
     const updated = new Student({
       ...entity.toObject(),
-      ...newData,
+      ...newData
     })
     this.repository.save(updated)
     return updated
   }
 
-  create(creationData: StudentCreationType): Student {
+  create(creationData: StudentCreationType) {
     const existing = this.repository.listBy('document', creationData.document)
     if (existing.length > 0) {
       throw new ConflictError(creationData.document, Student)
