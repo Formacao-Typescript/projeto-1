@@ -3,11 +3,14 @@
   "version": "0.0.1",
   "description": "Repositório de resposta do primeiro projeto da formação TS",
   "main": "dist/app.js",
+  "bin": {
+    "school": "dist/app.js"
+  },
   "type": "module",
   "scripts": {
     "prestart": "npm run build",
-    "start": "node --env-file=.env dist/app.js",
-    "dev": "tsx watch src/app.ts",
+    "start": "IS_WEB=1 node --env-file=.env dist/app.js",
+    "dev": "IS_WEB=1 tsx watch src/app.ts",
     "build": "tsc"
   },
   "keywords": [],
@@ -21,6 +24,8 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
+    "commander": "^11.1.0",
+    "enquirer": "^2.4.1",
     "express": "^4.18.2",
     "helmet": "^7.0.0",
     "zod": "^3.22.4"
