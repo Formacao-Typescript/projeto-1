@@ -11,15 +11,19 @@
 
 2. Abra a pasta do projeto no Visual Studio Code ou no seu editor de preferência
 3. Abra o terminal do Visual Studio Code e execute o comando `npm install` para instalar as dependências do projeto
-4. Execute o comando `npm run dev` para iniciar o servidor de desenvolvimento ou `npm start` para poder iniciar o projeto completo sem estar no modo de desenvolvimento
+4. Execute o comando `npm run dev` para iniciar o servidor **WEB** de desenvolvimento ou `npm start` para poder iniciar o projeto completo sem estar no modo de desenvolvimento
 
-## Desafios
+Para rodar o CLI você vai precisar ter o `tsx` instalado globalmente com `npm i -g tsx`. Depois disso vá até a pasta `src` e rode `./app.ts` para iniciar o CLI.
 
-### 1 - Troque o framework da camada de apresentação
+> Se você estiver em sistemas Windows, a execução pode ser um pouco diferente, recomendo o uso de WSL
 
-Hoje estamos usando o [express](http://npm.im/express), mas você pode trocar para o [koa](http://npm.im/koa) ou [fastify](http://npm.im/fastify) ou qualquer outro framework que você queira de forma bem mais simples do que se tivéssemos feito o projeto sem utilizar camadas.
+Para executar o CLI através do binário nativo, execute `npm run build` e `npm link` na pasta raiz do projeto. Isso vai criar um binário chamado `school` apontado para o arquivo `dist/app.js`, execute `school --help` para ver os comandos disponíveis.
 
-O desafio é trocar o framework da camada de apresentação e fazer com que o projeto continue funcionando da mesma forma!
+## Desafio
+
+Nesse desafio vamos criar uma outra camada de apresentação em conjunto com a atual, escolhemos uma linha de comando, mas você pode criar qualquer outra camada de apresentação que quiser, como uma interface gráfica, por exemplo. O importante é que o projeto continue funcionando da mesma forma, independente da camada de apresentação que você escolher.
+
+A implementação feita nesse desafio é básica, apenas implementamos a entidade de pais, e não implementamos o endpoint de atualização. O seu desafio é melhorar este desafio, criando as demais entidades que faltam e implementando os endpoints que faltam.
 
 ### 2 - Crie uma outra camada de apresentação em conjunto com a atual
 
@@ -29,24 +33,3 @@ O desafio é criar uma nova camada de apresentação CLI e fazer com que o proje
 
 > Se você estiver a fim de um desafio ainda maior, tente ir além do CLI e criar uma Text User Interface (TUI), que é uma interface gráfica feita com texto, como o [blessed](http://npm.im/blessed) ou o [ink](http://npm.im/ink).
 
-### 3 - Eager loading de classes
-
-Hoje, estamos guardando um ID dentro das nossas entidades de banco. Mas não retornamos essas entidades diretamente para o usuário. Por exemplo, o aluno tem um array de IDs de pais e um ID de classe que temos que fazer uma query separada para poder obter.
-
-O desafio aqui é fazer com que o projeto faça eager loading das entidades, ou seja, que ele já retorne as entidades relacionadas ao invés de IDs. Por exemplo, ao invés de retornar um array de IDs de pais, retornar um array de entidades de pais como objetos, mas ainda assim, o banco de dados deve guardar somente o ID do pai.
-
-### 4 - Crie uma camada de persistência
-
-Como você pode perceber, criamos o nosso banco de dados do zero para poder guardar as informações do nosso projeto. Mas e se quiséssemos trocar o banco de dados? Teríamos que mudar o código inteiro, não é mesmo? Felizmente não! Como estamos usando uma aplicação em camadas, podemos dividir o nosso projeto e modificar as camadas inferiores sem precisar modificar as camadas superiores.
-
-O desafio é não usar mais o banco de dados criado por nós e sim usar um banco de dados de verdade, como o [PostgreSQL](http://postgresql.org), ou o [MySQL](http://mysql.com), ou até mesmo o [MongoDB](http://mongodb.com).
-
-> Tente não usar ORMs por enquanto, use apenas as bibliotecas nativas dos bancos de dados porque vamos ver ORMs mais para frente.
-
-### 5 - HTTP nativo
-
-Hoje, estamos usando o [express](http://npm.im/express) para criar o nosso servidor HTTP, mas o Node também tem a implementação nativa de um servidor HTTP, que é o [http](http://nodejs.org/api/http.html).
-
-O desafio é trocar o express pelo http nativo e fazer com que o projeto continue funcionando da mesma forma! Ou seja, temos que ter as rotas, validações, respostas de erros e tudo mais, porém sem usar nada do express.
-
-> *Bônus*: Que tal tentar usar a biblioteca de HTTP2 do Node? [http2](http://nodejs.org/api/http2.html)
