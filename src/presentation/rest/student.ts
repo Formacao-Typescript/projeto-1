@@ -4,12 +4,12 @@ import {
   StudentCreationSchema,
   StudentCreationType,
   StudentUpdateSchema,
-  StudentUpdateType,
-} from '../domain/Student.js'
-import { StudentService } from '../services/StudentService.js'
+  StudentUpdateType
+} from '../../domain/Student.js'
+import { StudentService } from '../../services/StudentService.js'
 import zodValidationMiddleware from './middlewares/zodValidationMiddleware.js'
-import { Parent } from '../domain/Parent.js'
-import { ClassService } from '../services/ClassService.js'
+import { Parent } from '../../domain/Parent.js'
+import { ClassService } from '../../services/ClassService.js'
 
 export function studentRouterFactory(studentService: StudentService, classService: ClassService) {
   const router = Router()
@@ -49,7 +49,7 @@ export function studentRouterFactory(studentService: StudentService, classServic
       } catch (error) {
         next(error)
       }
-    },
+    }
   )
 
   router.delete('/:id', async (req, res) => {
@@ -78,7 +78,7 @@ export function studentRouterFactory(studentService: StudentService, classServic
       } catch (error) {
         next(error)
       }
-    },
+    }
   )
 
   return router

@@ -5,13 +5,13 @@ import {
   TeacherCreationType,
   TeacherUpdateSchema,
   TeacherUpdateType
-} from '../domain/Teacher.js'
-import { ClassService } from '../services/ClassService.js'
-import { StudentService } from '../services/StudentService.js'
-import { TeacherService } from '../services/TeacherService.js'
+} from '../../domain/Teacher.js'
+import { ClassService } from '../../services/ClassService.js'
+import { StudentService } from '../../services/StudentService.js'
+import { TeacherService } from '../../services/TeacherService.js'
 import zodValidationMiddleware from './middlewares/zodValidationMiddleware.js'
-import { Student } from '../domain/Student.js'
-import { Class } from '../domain/Class.js'
+import { Student } from '../../domain/Student.js'
+import { Class } from '../../domain/Class.js'
 
 export function teacherRouterFactory(
   teacherService: TeacherService,

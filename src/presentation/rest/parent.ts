@@ -1,9 +1,9 @@
 import { Router } from 'express'
-import { Parent, ParentCreationSchema, ParentUpdateSchema } from '../domain/Parent.js'
-import { ParentService } from '../services/ParentService.js'
-import { StudentService } from '../services/StudentService.js'
+import { Parent, ParentCreationSchema, ParentUpdateSchema } from '../../domain/Parent.js'
+import { ParentService } from '../../services/ParentService.js'
+import { StudentService } from '../../services/StudentService.js'
 import zodValidationMiddleware from './middlewares/zodValidationMiddleware.js'
-import { Student } from '../domain/Student.js'
+import { Student } from '../../domain/Student.js'
 
 export function parentRouterFactory(parentService: ParentService, studentService: StudentService) {
   const router = Router()
@@ -45,7 +45,7 @@ export function parentRouterFactory(parentService: ParentService, studentService
       const students = studentService.listBy('parents', [id])
       if (students.length > 0) {
         return res.status(403).json({
-          message: `Cannot delete parent with id ${id} because it has students assigned`,
+          message: `Cannot delete parent with id ${id} because it has students assigned`
         })
       }
 

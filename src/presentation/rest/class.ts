@@ -1,7 +1,13 @@
 import { Request, Router } from 'express'
-import { Class, ClassCreationSchema, ClassCreationType, ClassUpdateSchema, ClassUpdateType } from '../domain/Class.js'
-import { Student } from '../domain/Student.js'
-import { ClassService } from '../services/ClassService.js'
+import {
+  Class,
+  ClassCreationSchema,
+  ClassCreationType,
+  ClassUpdateSchema,
+  ClassUpdateType
+} from '../../domain/Class.js'
+import { Student } from '../../domain/Student.js'
+import { ClassService } from '../../services/ClassService.js'
 import zodValidationMiddleware from './middlewares/zodValidationMiddleware.js'
 
 export function classRouterFactory(classService: ClassService) {
@@ -31,7 +37,7 @@ export function classRouterFactory(classService: ClassService) {
       } catch (error) {
         next(error)
       }
-    },
+    }
   )
 
   router.put(
@@ -45,7 +51,7 @@ export function classRouterFactory(classService: ClassService) {
       } catch (error) {
         next(error)
       }
-    },
+    }
   )
 
   router.delete('/:id', async (req, res, next) => {

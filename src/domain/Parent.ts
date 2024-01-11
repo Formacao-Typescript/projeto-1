@@ -4,12 +4,12 @@ import { AddressSchema, Serializable } from './types.js'
 
 export const ParentCreationSchema = z.object({
   id: z.string().uuid().optional(),
-  firstName: z.string(),
-  surname: z.string(),
-  phones: z.array(z.string()).nonempty(),
+  firstName: z.string().min(1),
+  surname: z.string().min(1),
+  phones: z.array(z.string().min(1)).nonempty(),
   emails: z.array(z.string().email()).nonempty(),
   address: z.array(AddressSchema).nonempty(),
-  document: z.string()
+  document: z.string().min(1)
 })
 
 export const ParentUpdateSchema = ParentCreationSchema.partial().omit({ id: true })

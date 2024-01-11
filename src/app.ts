@@ -1,9 +1,11 @@
+#!/usr/bin/env tsx
 import { appConfig, type AppConfig } from './config.js'
 import { ClassRepository } from './data/ClassRepository.js'
 import { ParentRepository } from './data/ParentRepository.js'
 import { StudentRepository } from './data/StudentRepository.js'
 import { TeacherRepository } from './data/TeacherRepository.js'
-import { WebLayer } from './presentation/index.js'
+import { CLILayer } from './presentation/cli/index.js'
+import { WebLayer } from './presentation/rest/index.js'
 import { ClassService } from './services/ClassService.js'
 import { ParentService } from './services/ParentService.js'
 import { StudentService } from './services/StudentService.js'
@@ -68,4 +70,8 @@ async function main(app: Application, config: AppConfig) {
   return start()
 }
 
-await main(WebLayer, appConfig)
+if (process.env.IS_WEB) {
+  await main(WebLayer, appConfig)
+} else {
+  await main(CLILayer, appConfig)
+}
