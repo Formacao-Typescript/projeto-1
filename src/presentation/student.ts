@@ -16,23 +16,30 @@ export function studentRouterFactory(studentService: StudentService, classServic
 
   router.get('/:id', async (req, res, next) => {
     try {
-      const student = studentService.findById(req.params.id)
-      return res.json(student.toObject())
+      const student = studentService.findById(req.params.id) as Student
+      const classEntity = classService.findById(student.class).toObject()
+      return res.json({ ...student.toObject(), classEntity })
     } catch (error) {
       next(error)
     }
   })
 
   router.get('/', async (_, res) => {
-    return res.json((studentService.list() as Student[]).map((student: Student) => student.toObject())) // FIXME: Como melhorar?
+    const students = studentService.list() as Student[] // FIXME: Como melhorar?
+    return res.json(
+      students.map((student) => {
+        const classEntity = classService.findById(student.class).toObject()
+        return { ...student.toObject(), classEntity }
+      })
+    )
   })
 
   router.post('/', zodValidationMiddleware(StudentCreationSchema.omit({ id: true })), async (req, res, next) => {
     try {
-      const student = studentService.create(req.body)
+      const student = studentService.create(req.body).toObject()
       // verifica se a classe existe antes de inserir o objeto
-      classService.findById(req.body.class)
-      return res.status(201).json(student.toObject())
+      const classEntity = classService.findById(req.body.class).toObject()
+      return res.status(201).json({ ...student, classEntity })
     } catch (error) {
       next(error)
     }
@@ -45,11 +52,13 @@ export function studentRouterFactory(studentService: StudentService, classServic
       try {
         const { id } = req.params
         const updated = studentService.update(id, req.body)
-        return res.json(updated.toObject())
+
+        const classEntity = classService.findById(updated.class).toObject()
+        return res.json({ ...updated.toObject(), classEntity })
       } catch (error) {
         next(error)
       }
-    },
+    }
   )
 
   router.delete('/:id', async (req, res) => {
@@ -74,7 +83,9 @@ export function studentRouterFactory(studentService: StudentService, classServic
       try {
         const { id } = req.params
         const { parents } = req.body
-        return res.json(studentService.linkParents(id, parents).toObject())
+        const updated = studentService.linkParents(id, parents).toObject()
+        const classEntity = classService.findById(updated.class).toObject()
+        return res.json({ ...updated, classEntity })
       } catch (error) {
         next(error)
       }

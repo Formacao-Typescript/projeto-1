@@ -57,6 +57,7 @@ export class Teacher implements Serializable {
 
   toObject() {
     return {
+      id: this.id,
       firstName: this.firstName,
       surname: this.surname,
       phone: this.phone,
@@ -64,8 +65,7 @@ export class Teacher implements Serializable {
       document: this.document,
       salary: this.salary,
       hiringDate: this.hiringDate.toISOString(),
-      major: this.major,
-      id: this.id
+      major: this.major
     }
   }
 }

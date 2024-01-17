@@ -1,5 +1,5 @@
 import { Database } from '../data/Db.js'
-import { Class, ClassCreationType, ClassUpdateType } from '../domain/Class.js'
+import { Class, ClassCreationType, ClassUpdateType, ExtendedClass } from '../domain/Class.js'
 import { ConflictError } from '../domain/Errors/Conflict.js'
 import { DependencyConflictError } from '../domain/Errors/DependencyConflict.js'
 import { MissingDependencyError } from '../domain/Errors/MissingDependency.js'
@@ -13,15 +13,13 @@ export class ClassService extends Service {
   constructor(
     repository: Database,
     private readonly teacherService: TeacherService,
-    private readonly studentService: StudentService,
+    private readonly studentService: StudentService
   ) {
     super(repository)
   }
 
   #assertTeacherExists(teacherId?: string | null) {
-    if (teacherId) {
-      this.teacherService.findById(teacherId)
-    }
+    if (teacherId) this.teacherService.findById(teacherId)
   }
 
   update(id: string, newData: ClassUpdateType) {
@@ -30,10 +28,24 @@ export class ClassService extends Service {
 
     const updated = new Class({
       ...entity.toObject(),
-      ...newData,
+      ...newData
     })
     this.repository.save(updated)
-    return updated
+
+    if (!updated.teacher) return new ExtendedClass(updated)
+
+    const teacher = this.teacherService.findById(updated.teacher) as Teacher
+    return new ExtendedClass(updated, teacher)
+  }
+
+  list() {
+    const classes = this.repository.list() as Class[]
+    return classes.map((classEntity) => {
+      if (!classEntity.teacher) return new ExtendedClass(classEntity)
+
+      const teacher = this.teacherService.findById(classEntity.teacher) as Teacher
+      return new ExtendedClass(classEntity, teacher)
+    })
   }
 
   create(creationData: ClassCreationType) {
@@ -44,7 +56,13 @@ export class ClassService extends Service {
 
     const entity = new Class(creationData)
     this.repository.save(entity)
-    return entity
+
+    if (entity.teacher) {
+      const teacher = this.teacherService.findById(entity.teacher) as Teacher
+      return new ExtendedClass(entity, teacher)
+    }
+
+    return new ExtendedClass(entity)
   }
 
   remove(id: string) {

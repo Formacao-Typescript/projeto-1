@@ -1,5 +1,6 @@
 import { Database } from '../data/Db.js'
 import { NotFoundError } from '../domain/Errors/NotFound.js'
+import { Teacher } from '../domain/Teacher.js'
 import { Serializable } from '../domain/types.js'
 
 export abstract class Service {

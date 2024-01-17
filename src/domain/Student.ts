@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
 import { Serializable } from './types.js'
+import { Parent } from './Parent.js'
+import { Class, ExtendedClass } from './Class.js'
 
 export const StudentCreationSchema = z.object({
   id: z.string().uuid().optional(),
@@ -91,5 +93,25 @@ export class Student implements Serializable {
   // e abstrair esse método toJSON para ela
   toJSON() {
     return JSON.stringify(this.toObject())
+  }
+}
+
+export class ExtendedStudent extends Student {
+  parentEntities: Parent[]
+
+  constructor(student: Student, parents: Parent[]) {
+    super(student.toObject())
+    this.parentEntities = parents
+  }
+
+  toJSON(): string {
+    return JSON.stringify(this.toObject())
+  }
+
+  toObject() {
+    return {
+      ...super.toObject(),
+      parentEntities: this.parentEntities.map((parent) => parent.toObject())
+    }
   }
 }

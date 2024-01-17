@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { Serializable } from './types.js'
 import { randomUUID } from 'node:crypto'
+import { Teacher } from './Teacher.js'
 
 export const ClassCreationSchema = z.object({
   id: z.string().uuid().optional(),
@@ -25,11 +26,12 @@ export class Class implements Serializable {
     this.teacher = parsed.teacher
     this.id = parsed.id ?? randomUUID()
   }
+
   toObject() {
     return {
+      id: this.id,
       code: this.code,
-      teacher: this.teacher,
-      id: this.id
+      teacher: this.teacher
     }
   }
 
@@ -40,5 +42,25 @@ export class Class implements Serializable {
 
   toJSON() {
     return JSON.stringify(this.toObject())
+  }
+}
+
+export class ExtendedClass extends Class implements Serializable {
+  teacherEntity: Teacher | null
+
+  constructor(simpleClass: Class, teacher?: Teacher) {
+    super(simpleClass.toObject())
+    this.teacherEntity = teacher ?? null
+  }
+
+  toJSON(): string {
+    return JSON.stringify(this.toObject())
+  }
+
+  toObject() {
+    return {
+      ...super.toObject(),
+      teacherEntity: this.teacherEntity ? this.teacherEntity.toObject() : this.teacher
+    }
   }
 }
