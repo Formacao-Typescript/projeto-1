@@ -15,8 +15,8 @@ export const StudentCreationSchema = z.object({
     // Porém iríamos precisar estender o objeto para que ele aceite um Date
     // E aqui não seria uma boa solução
     .refine((date) => !isNaN(new Date(date).getTime())),
-  allergies: z.array(z.string()).optional(),
-  medications: z.array(z.string()).optional(),
+  allergies: z.array(z.string()).nullable().optional().default([]),
+  medications: z.array(z.string()).nullable().optional().default([]),
   startDate: z
     .string()
     .datetime()
@@ -31,6 +31,7 @@ export const StudentUpdateSchema = StudentCreationSchema.partial().omit({ id: tr
 export type StudentUpdateType = z.infer<typeof StudentUpdateSchema>
 
 export class Student implements Serializable {
+  static collection = 'students'
   firstName: StudentCreationType['firstName']
   surname: StudentCreationType['surname']
   document: StudentCreationType['document']
@@ -50,8 +51,8 @@ export class Student implements Serializable {
     this.document = parsed.document
     this.bloodType = parsed.bloodType
     this.birthDate = new Date(parsed.birthDate)
-    this.allergies = parsed.allergies
-    this.medications = parsed.medications
+    this.allergies = parsed.allergies ?? []
+    this.medications = parsed.medications ?? []
     this.startDate = new Date(parsed.startDate)
     this.#parents = parsed.parents
     this.class = parsed.class

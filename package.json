@@ -6,8 +6,9 @@
   "type": "module",
   "scripts": {
     "prestart": "npm run build",
-    "start": "node --env-file=.env dist/app.js",
-    "dev": "tsx watch src/app.ts",
+    "start": "npm run infra:up && node --env-file=.env dist/app.js",
+    "dev": "npm run infra:up && tsx watch src/app.ts",
+    "infra:up": "docker-compose up -d",
     "build": "tsc"
   },
   "keywords": [],
@@ -23,6 +24,7 @@
   "dependencies": {
     "express": "^4.18.2",
     "helmet": "^7.0.0",
+    "mongodb": "^6.3.0",
     "zod": "^3.22.4"
   }
 }

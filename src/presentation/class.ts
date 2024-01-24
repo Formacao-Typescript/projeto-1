@@ -10,7 +10,7 @@ export function classRouterFactory(classService: ClassService) {
   router.get('/:id', async (req, res, next) => {
     try {
       const { id } = req.params
-      const classEntity = classService.findById(id)
+      const classEntity = await classService.findById(id)
       return res.json(classEntity.toObject())
     } catch (error) {
       next(error)
@@ -18,7 +18,7 @@ export function classRouterFactory(classService: ClassService) {
   })
 
   router.get('/', async (_, res) => {
-    return res.json((classService.list() as Class[]).map((classEntity: Class) => classEntity.toObject())) // FIXME: Como melhorar?
+    return res.json(((await classService.list()) as Class[]).map((classEntity: Class) => classEntity.toObject())) // FIXME: Como melhorar?
   })
 
   router.post(
@@ -26,12 +26,12 @@ export function classRouterFactory(classService: ClassService) {
     zodValidationMiddleware(ClassCreationSchema.omit({ id: true })),
     async (req: Request<never, any, Omit<ClassCreationType, 'id'>>, res, next) => {
       try {
-        const classEntity = classService.create(req.body)
+        const classEntity = await classService.create(req.body)
         return res.status(201).json(classEntity.toObject())
       } catch (error) {
         next(error)
       }
-    },
+    }
   )
 
   router.put(
@@ -40,17 +40,17 @@ export function classRouterFactory(classService: ClassService) {
     async (req: Request<{ id: string }, any, ClassUpdateType>, res, next) => {
       try {
         const { id } = req.params
-        const updated = classService.update(id, req.body)
+        const updated = await classService.update(id, req.body)
         return res.json(updated.toObject())
       } catch (error) {
         next(error)
       }
-    },
+    }
   )
 
   router.delete('/:id', async (req, res, next) => {
     try {
-      classService.remove(req.params.id)
+      await classService.remove(req.params.id)
       return res.status(204).send()
     } catch (error) {
       next(error)
@@ -60,7 +60,7 @@ export function classRouterFactory(classService: ClassService) {
   router.get('/:id/students', async (req, res, next) => {
     try {
       const { id } = req.params
-      const students = classService.getStudents(id) as Student[] // FIXME: Como melhorar?
+      const students = (await classService.getStudents(id)) as Student[] // FIXME: Como melhorar?
       return res.json(students.map((student: Student) => student.toObject()))
     } catch (error) {
       next(error)
@@ -70,7 +70,7 @@ export function classRouterFactory(classService: ClassService) {
   router.get('/:id/teacher', async (req, res, next) => {
     try {
       const { id } = req.params
-      const teacher = classService.getTeacher(id)
+      const teacher = await classService.getTeacher(id)
       return res.json(teacher.toObject())
     } catch (error) {
       next(error)

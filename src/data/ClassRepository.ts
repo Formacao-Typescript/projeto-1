@@ -1,8 +1,9 @@
+import { Db } from 'mongodb'
 import { Class } from '../domain/Class.js'
 import { Database } from './Db.js'
 
 export class ClassRepository extends Database {
-  constructor() {
-    super(Class)
+  constructor(connection: Db) {
+    super(connection, Class)
   }
 }

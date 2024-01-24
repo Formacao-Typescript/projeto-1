@@ -23,6 +23,7 @@ export const TeacherUpdateSchema = TeacherCreationSchema.partial().omit({ id: tr
 export type TeacherUpdateType = z.infer<typeof TeacherUpdateSchema>
 
 export class Teacher implements Serializable {
+  static collection = 'teachers'
   firstName: TeacherCreationType['firstName']
   surname: TeacherCreationType['surname']
   phone: TeacherCreationType['phone']

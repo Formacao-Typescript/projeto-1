@@ -13,6 +13,7 @@ export const ClassUpdateSchema = ClassCreationSchema.partial().omit({ id: true }
 export type ClassUpdateType = z.infer<typeof ClassUpdateSchema>
 
 export class Class implements Serializable {
+  static collection = 'classes'
   code: ClassCreationType['code']
   // Uma forma mais simples de declarar acessores
   // veja Student.ts para a outra forma na propriedade parents

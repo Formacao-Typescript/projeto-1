@@ -11,6 +11,7 @@ export type Address = z.infer<typeof AddressSchema>
 
 export interface SerializableStatic {
   new (...args: any[]): any
+  collection: string
   fromObject(data: Record<string, unknown>): InstanceType<this>
 }
 

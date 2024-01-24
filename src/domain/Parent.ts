@@ -18,6 +18,7 @@ export type ParentCreationType = z.infer<typeof ParentCreationSchema>
 export type ParentUpdateType = z.infer<typeof ParentUpdateSchema>
 
 export class Parent implements Serializable {
+  static collection = 'parents'
   firstName: ParentCreationType['firstName']
   surname: ParentCreationType['surname']
   phones: ParentCreationType['phones']

@@ -13,60 +13,60 @@ export class ClassService extends Service {
   constructor(
     repository: Database,
     private readonly teacherService: TeacherService,
-    private readonly studentService: StudentService,
+    private readonly studentService: StudentService
   ) {
     super(repository)
   }
 
-  #assertTeacherExists(teacherId?: string | null) {
+  async #assertTeacherExists(teacherId?: string | null) {
     if (teacherId) {
-      this.teacherService.findById(teacherId)
+      await this.teacherService.findById(teacherId)
     }
   }
 
-  update(id: string, newData: ClassUpdateType) {
-    const entity = this.findById(id) as Class
+  async update(id: string, newData: ClassUpdateType) {
+    const entity = (await this.findById(id)) as Class
     this.#assertTeacherExists(newData.teacher)
 
     const updated = new Class({
       ...entity.toObject(),
-      ...newData,
+      ...newData
     })
-    this.repository.save(updated)
+    await this.repository.save(updated)
     return updated
   }
 
-  create(creationData: ClassCreationType) {
-    const existing = this.repository.listBy('code', creationData.code)
+  async create(creationData: ClassCreationType) {
+    const existing = await this.repository.listBy('code', creationData.code)
     if (existing.length > 0) throw new ConflictError(creationData.code, Class)
 
-    this.#assertTeacherExists(creationData.teacher)
+    await this.#assertTeacherExists(creationData.teacher)
 
     const entity = new Class(creationData)
-    this.repository.save(entity)
+    await this.repository.save(entity)
     return entity
   }
 
-  remove(id: string) {
-    const students = this.studentService.listBy('class', id)
+  async remove(id: string) {
+    const students = await this.studentService.listBy('class', id)
     if (students.length > 0) {
       throw new DependencyConflictError(Class, id, Student)
     }
 
-    this.repository.remove(id)
+    await this.repository.remove(id)
   }
 
-  getTeacher(classId: string) {
-    const classEntity = this.findById(classId) as Class // FIXME: como melhorar?
+  async getTeacher(classId: string) {
+    const classEntity = (await this.findById(classId)) as Class // FIXME: como melhorar?
 
     if (!classEntity.teacher) throw new MissingDependencyError(Teacher, classId, Class)
 
-    const teacher = this.teacherService.findById(classEntity.teacher)
+    const teacher = await this.teacherService.findById(classEntity.teacher)
     return teacher as Teacher
   }
 
-  getStudents(classId: string) {
-    const classEntity = this.findById(classId) as Class
-    return this.studentService.listBy('class', classEntity.id) as Student[]
+  async getStudents(classId: string) {
+    const classEntity = (await this.findById(classId)) as Class
+    return this.studentService.listBy('class', classEntity.id) as Promise<Student[]>
   }
 }

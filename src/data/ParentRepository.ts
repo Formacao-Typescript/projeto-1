@@ -1,3 +1,4 @@
+import { Db } from 'mongodb'
 import { Parent } from '../domain/Parent.js'
 import { Database } from './Db.js'
 
@@ -7,7 +8,7 @@ import { Database } from './Db.js'
  * é melhor sempre criar uma classe específica, por isso fizemos Database abstrata
  */
 export class ParentRepository extends Database {
-  constructor() {
-    super(Parent)
+  constructor(connection: Db) {
+    super(connection, Parent)
   }
 }

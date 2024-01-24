@@ -1,0 +1,9 @@
+services:
+  database:
+    image: mvertes/alpine-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./.data:/data/db
+volumes:
+  database:

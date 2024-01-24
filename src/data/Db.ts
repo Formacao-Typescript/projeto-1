@@ -1,80 +1,44 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
-import { dirname, resolve } from 'path'
+import { Collection, Db, ObjectId } from 'mongodb'
 import type { Serializable, SerializableStatic } from '../domain/types.js'
-import { fileURLToPath } from 'url'
 
-/**
- * Fazemos dessa classe uma classe abstrata para que a gente sempre precise
- * criar uma classe específica para cada entidade que queremos persistir
- * e evitar o uso de new Database(Parent) no entrypoint
- * Será que conseguimos deixar ela ainda mais genérica?
- */
 export abstract class Database {
-  protected readonly dbPath: string
-  protected dbData: Map<string, Serializable> = new Map()
   readonly dbEntity: SerializableStatic
+  readonly db: Collection
 
-  // FIXME: Como melhorar?
-  constructor(entity: SerializableStatic) {
-    this.dbPath = resolve(dirname(fileURLToPath(import.meta.url)), `.data/${entity.name.toLowerCase()}.json`)
+  constructor(connection: Db, entity: SerializableStatic) {
+    this.db = connection.collection(entity.collection)
     this.dbEntity = entity
-    this.#initialize()
   }
 
-  #initialize() {
-    if (!existsSync(dirname(this.dbPath))) {
-      mkdirSync(dirname(this.dbPath), { recursive: true })
-    }
-    if (existsSync(this.dbPath)) {
-      const data: [string, Record<string, unknown>][] = JSON.parse(readFileSync(this.dbPath, 'utf-8'))
-      for (const [key, value] of data) {
-        this.dbData.set(key, this.dbEntity.fromObject(value))
-      }
-      return
-    }
-    this.#updateFile()
-  }
-
-  #updateFile() {
-    const data = [...this.dbData.entries()].map(([key, value]) => [key, value.toObject()])
-    writeFileSync(this.dbPath, JSON.stringify(data))
-    return this
-  }
-
-  findById(id: string) {
-    return this.dbData.get(id)
+  async findById(id: string) {
+    const document = await this.db.findOne({ id })
+    if (!document) return null
+    return this.dbEntity.fromObject(document)
   }
 
   // FIXME: Conseguimos deixar esse método mais genérico?
-  listBy(property: string, value: any) {
-    const allData = this.list()
-    return allData.filter((data) => {
-      let comparable = (data as any)[property] as unknown // FIXME: Como melhorar?
-      let comparison = value as unknown
-      // Se a propriedade for um objeto, um array ou uma data
-      // não temos como comparar usando ===
-      // portanto vamos converter tudo que cair nesses casos para string
-      if (typeof comparable === 'object')
-        [comparable, comparison] = [JSON.stringify(comparable), JSON.stringify(comparison)]
-
-      // Ai podemos comparar os dois dados
-      return comparable === comparison
-    })
+  async listBy(property: string, value: any) {
+    const query = { [property]: value }
+    if (Array.isArray(value)) {
+      query[property] = { $in: value }
+    }
+    const documents = await this.db.find(query).toArray()
+    return documents.map((document) => this.dbEntity.fromObject(document))
   }
 
-  // FIXME: Como melhorar?
-  list(): Serializable[] {
-    return [...this.dbData.values()]
+  async list() {
+    const documents = await this.db.find().toArray()
+
+    console.log(documents)
+    return documents.map<Serializable>((document) => this.dbEntity.fromObject(document))
   }
 
-  remove(id: string) {
-    this.dbData.delete(id)
-    return this.#updateFile()
+  async remove(id: string) {
+    return this.db.deleteOne({ id })
   }
 
-  // FIXME: Como melhorar?
-  save(entity: Serializable) {
-    this.dbData.set(entity.id, entity)
-    return this.#updateFile()
+  async save(entity: Serializable) {
+    console.log(entity.toObject())
+    return this.db.replaceOne({ id: entity.id }, entity.toObject(), { upsert: true })
   }
 }
