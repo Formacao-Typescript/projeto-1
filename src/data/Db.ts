@@ -1,4 +1,4 @@
-import { Collection, Db, ObjectId } from 'mongodb'
+import { Collection, Db } from 'mongodb'
 import type { Serializable, SerializableStatic } from '../domain/types.js'
 
 export abstract class Database {
@@ -28,8 +28,6 @@ export abstract class Database {
 
   async list() {
     const documents = await this.db.find().toArray()
-
-    console.log(documents)
     return documents.map<Serializable>((document) => this.dbEntity.fromObject(document))
   }
 
@@ -38,7 +36,6 @@ export abstract class Database {
   }
 
   async save(entity: Serializable) {
-    console.log(entity.toObject())
     return this.db.replaceOne({ id: entity.id }, entity.toObject(), { upsert: true })
   }
 }

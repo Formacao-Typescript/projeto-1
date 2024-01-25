@@ -66,7 +66,7 @@ export function teacherRouterFactory(
     const classes = await classService.listBy('teacher', req.params.id)
 
     for (const classEntity of classes) {
-      classService.update(classEntity.id, { teacher: null })
+      await classService.update(classEntity.id, { teacher: null })
     }
 
     res.status(204).json(await teacherService.remove(req.params.id))
